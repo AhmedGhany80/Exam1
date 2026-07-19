@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>اختبار أساسيات البرمجة | م/ أحمد عبدالغني</title>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Custom Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Fira+Code:wght@400;500&display=swap');
+
+       :root{
+    --primary-blue:#0F4C81;
+    --primary-light:#3B82F6;
+    --secondary:#1E293B;
+    --success:#22C55E;
+    --danger:#EF4444;
+    --warning:#F59E0B;
+    --background:#F8FAFC;
+    --card:#FFFFFF;
+    --border:#E2E8F0;
+}
+
+       body{
+    font-family:'Cairo',sans-serif;
+    background:linear-gradient(135deg,#F8FAFC,#EEF5FF);
+    user-select:none;
+    -webkit-user-select:none;
+    overflow:hidden;
+}
+        .exam-card{
+    background:white;
+    border-radius:20px;
+    box-shadow:0 15px 35px rgba(0,0,0,.08);
+}
+
+.exam-title{
+
+    font-size:55px;
+
+    font-weight:900;
+
+    color:#0F4C81;
+
+}
+
+.exam-sub{
+
+    color:#64748B;
+
+    font-size:22px;
+
+}
+
+.start-btn{
+
+    background:#0F4C81;
+
+    color:white;
+
+    padding:18px 60px;
+
+    border-radius:60px;
+
+    font-size:24px;
+
+    font-weight:bold;
+
+    transition:.3s;
+
+}
+
+.start-btn:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:0 10px 25px rgba(15,76,129,.35);
+
+}
+
+.question-card{
+
+    background:white;
+
+    border-radius:18px;
+
+    box-shadow:0 10px 30px rgba(0,0,0,.06);
+
+}
+
+.answer{
+
+    border:2px solid #E2E8F0;
+
+    border-radius:15px;
+
+    padding:18px;
+
+    cursor:pointer;
+
+    transition:.25s;
+
+}
+
+.answer:hover{
+
+    border-color:#3B82F6;
+
+    transform:scale(1.02);
+
+}
+
+.answer.selected{
+
+    border-color:#0F4C81;
+
+    background:#EEF5FF;
+
+}
+
+.timer{
+
+    font-size:26px;
+
+    font-weight:bold;
+
+    color:#0F4C81;
+
+}
+
+.progress{
+
+    height:10px;
+
+    border-radius:10px;
+
+    overflow:hidden;
+
+    background:#E2E8F0;
+
+}
+
+.progress div{
+
+    background:#22C55E;
+
+    height:100%;
+
+}
+        
+        /* تأثير النبض للزر */
+        @keyframes pulse-btn {
+            0% { box-shadow: 0 0 0 0 rgba(0, 86, 179, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 86, 179, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 86, 179, 0); }
+        }
+        .btn-pulse {
+            animation: pulse-btn 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-800 h-screen flex flex-col overflow-hidden">
+    <div id="root" class="h-full flex flex-col"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+       const questionsData = [
+
+{
+id:1,
+question:"ما وظيفة الدالة print() في لغة Python؟",
+options:[
+"إدخال بيانات من المستخدم",
+"طباعة البيانات على الشاشة",
+"حذف البيانات",
+"إنشاء متغير"
+],
+correctIndex:1,
+rationale:"تستخدم print() لعرض البيانات على الشاشة."
+},
+
+{
+id:2,
+question:"ما وظيفة الدالة input()؟",
+options:[
+"إدخال بيانات من المستخدم",
+"طباعة البيانات",
+"حذف المتغيرات",
+"إغلاق البرنامج"
+],
+correctIndex:0,
+rationale:"الدالة input() تستقبل البيانات من المستخدم."
+},
+
+{
+id:3,
+question:"أي من التالي يمثل عددًا صحيحًا (Integer)؟",
+options:[
+'"25"',
+"25",
+"True",
+"25.5"
+],
+correctIndex:1,
+rationale:"25 بدون علامات تنصيص هو عدد صحيح."
+},
+
+{
+id:4,
+question:"أي من التالي يمثل نصًا (String)؟",
+options:[
+"100",
+'"100"',
+"True",
+"5.5"
+],
+correctIndex:1,
+rationale:"أي قيمة بين علامتي تنصيص تعتبر String."
+},
+
+{
+id:5,
+question:"أي نوع بيانات يستخدم لتخزين القيم المنطقية؟",
+options:[
+"bool",
+"int",
+"float",
+"string"
+],
+correctIndex:0,
+rationale:"bool يحتوي على True أو False."
+},
+
+{
+id:6,
+question:"أي اسم متغير صحيح؟",
+options:[
+"2name",
+"my-name",
+"studentName",
+"first name"
+],
+correctIndex:2,
+rationale:"اسم المتغير لا يبدأ برقم ولا يحتوي على مسافات أو شرطة (-)."
+},
+
+{
+id:7,
+question:"ما ناتج الكود print(4+6) ؟",
+options:[
+"46",
+"10",
+"Error",
+"4+6"
+],
+correctIndex:1,
+rationale:"سيتم جمع الرقمين."
+},
+
+{
+id:8,
+question:'ما ناتج print("4"+"6") ؟',
+options:[
+"10",
+"46",
+"Error",
+"64"
+],
+correctIndex:1,
+rationale:"يتم دمج النصين."
+},
+
+{
+id:9,
+question:'ما ناتج print("4+6") ؟',
+options:[
+"10",
+"46",
+"4+6",
+"Error"
+],
+correctIndex:2,
+rationale:"كل ما بين علامتي التنصيص يعتبر نصًا."
+},
+
+{
+id:10,
+question:"إذا كتبنا x=5 ثم x=10 فما قيمة x؟",
+options:[
+"5",
+"10",
+"15",
+"Error"
+],
+correctIndex:1,
+rationale:"القيمة الجديدة تستبدل القديمة."
+},
+
+{
+id:11,
+question:"أي دالة تستخدم لتحويل النص إلى عدد صحيح؟",
+options:[
+"float()",
+"bool()",
+"int()",
+"str()"
+],
+correctIndex:2,
+rationale:"int() تحول النص إلى Integer."
+},
+
+{
+id:12,
+question:"ما نوع البيانات الذي ترجعها input()؟",
+options:[
+"int",
+"float",
+"str",
+"bool"
+],
+correctIndex:2,
+rationale:"الدالة input() ترجع String دائمًا."
+},
+
+{
+id:13,
+question:"ما ناتج print(8*2) ؟",
+options:[
+"16",
+"82",
+"10",
+"Error"
+],
+correctIndex:0,
+rationale:"عملية ضرب."
+},
+
+{
+id:14,
+question:"ما ناتج print(9-4) ؟",
+options:[
+"13",
+"5",
+"94",
+"Error"
+],
+correctIndex:1,
+rationale:"عملية طرح."
+},
+
+{
+id:15,
+question:"ما ناتج print(12/2) ؟",
+options:[
+"6",
+"6.0",
+"12",
+"Error"
+],
+correctIndex:1,
+rationale:"القسمة في Python تعطي Float."
+},
+
+{
+id:16,
+question:"ما ناتج print(12//2) ؟",
+options:[
+"6",
+"6.0",
+"12",
+"Error"
+],
+correctIndex:0,
+rationale:"// تعطي عددًا صحيحًا."
+},
+
+
+
+{
+id:17,
+question:"أي من التالي يمثل عددًا عشريًا؟",
+options:[
+"5",
+'"5.5"',
+"5.5",
+"True"
+],
+correctIndex:2,
+rationale:"5.5 هو Float."
+},
+
+{
+id:18,
+question:"ما ناتج الكود؟ x='Python' ثم print(x)",
+options:[
+"x",
+"Python",
+'"Python"',
+"Error"
+],
+correctIndex:1,
+rationale:"سيتم طباعة قيمة المتغير."
+},
+
+{
+id:19,
+question:"أي رمز يستخدم لكتابة تعليق في Python؟",
+options:[
+"//",
+"#",
+"/*",
+"--"
+],
+correctIndex:1,
+rationale:"التعليقات تبدأ بالرمز #."
+}
+
+,
+{
+id:20,
+question:"ما ناتج الكود التالي؟ print(2 ** 3)",
+options:[
+"6",
+"8",
+"9",
+"23"
+],
+correctIndex:1,
+rationale:"العامل ** يستخدم لحساب الأس (2³ = 8)."
+},
+
+{
+id:21,
+question:"إذا كتبنا age = input() ثم أدخل المستخدم الرقم 20، فما نوع المتغير age؟",
+options:[
+"int",
+"float",
+"str",
+"bool"
+],
+correctIndex:2,
+rationale:"الدالة input() ترجع دائمًا String."
+},
+
+{
+id:22,
+question:"أي كود صحيح لجمع رقمين من المستخدم؟",
+options:[
+'print(input()+input())',
+'print(int(input())+int(input()))',
+'print(str(input())+5)',
+'print(input()+5)'
+],
+correctIndex:1,
+rationale:"يجب تحويل القيم إلى int قبل جمعها."
+},
+
+{
+id:23,
+question:"أي من التالي يمثل قيمة منطقية (Boolean)؟",
+options:[
+'"True"',
+"True",
+"1",
+'"False"'
+],
+correctIndex:1,
+rationale:"True بدون علامات تنصيص هي قيمة منطقية."
+},
+
+{
+id:24,
+question:"أي من التالي ليس اسم متغير صحيح؟",
+options:[
+"_name",
+"name1",
+"student_age",
+"student age"
+],
+correctIndex:3,
+rationale:"لا يسمح بوجود مسافات داخل اسم المتغير."
+},
+
+{
+id:25,
+question:"ما ناتج الكود؟ print('Hello','Python')",
+options:[
+"HelloPython",
+"Hello Python",
+"Error",
+"Hello,Python"
+],
+correctIndex:1,
+rationale:"الدالة print() تضع مسافة بين القيم تلقائيًا."
+},
+
+{
+id:26,
+question:"إذا كانت x = 15 فما ناتج print(x)؟",
+options:[
+"x",
+"15",
+'"15"',
+"Error"
+],
+correctIndex:1,
+rationale:"سيتم طباعة قيمة المتغير."
+},
+
+{
+id:27,
+question:"أي من التالي يستخدم لتخزين اسم الطالب؟",
+options:[
+"int",
+"str",
+"bool",
+"float"
+],
+correctIndex:1,
+rationale:"الأسماء تعتبر بيانات نصية."
+},
+
+{
+id:28,
+question:"أي من التالي يستخدم لتخزين عمر الطالب؟",
+options:[
+"str",
+"bool",
+"int",
+"char"
+],
+correctIndex:2,
+rationale:"العمر غالبًا يكون عددًا صحيحًا."
+},
+
+{
+id:29,
+question:"إذا كان x = '10' فما ناتج print(x + '5') ؟",
+options:[
+"15",
+"105",
+"Error",
+"50"
+],
+correctIndex:1,
+rationale:"سيتم دمج النصين."
+},
+
+{
+id:30,
+question:"إذا كان x = 10 فما ناتج print(x + 5) ؟",
+options:[
+"15",
+"105",
+"Error",
+"5"
+],
+correctIndex:0,
+rationale:"سيتم جمع العددين."
+},
+
+{
+id:31,
+question:"ما سبب الخطأ في الكود؟ print(5 + '5')",
+options:[
+"لا يوجد خطأ",
+"لأننا جمعنا int مع str",
+"لأن print غير صحيحة",
+"لأن الرقم 5 غير صحيح"
+],
+correctIndex:1,
+rationale:"لا يمكن جمع عدد مع نص مباشرة."
+},
+
+{
+id:32,
+question:"أي دالة تستخدم لمعرفة نوع المتغير؟",
+options:[
+"print()",
+"len()",
+"type()",
+"input()"
+],
+correctIndex:2,
+rationale:"الدالة type() تعرض نوع البيانات."
+},
+
+{
+id:33,
+question:"إذا كتبنا name='Ali' فما ناتج print(f'Hello {name}') ؟",
+options:[
+"Hello name",
+"Hello Ali",
+"{name}",
+"Error"
+],
+correctIndex:1,
+rationale:"f-string تستبدل اسم المتغير بقيمته."
+},
+
+{
+id:34,
+question:"أي من التالي صحيح لتحويل الرقم 15 إلى نص؟",
+options:[
+"str(15)",
+"int(15)",
+"float(15)",
+"bool(15)"
+],
+correctIndex:0,
+rationale:"الدالة str() تحول القيمة إلى String."
+},
+
+{
+id:35,
+question:"إذا أدخل المستخدم القيمة 25 باستخدام int(input()) فما نوع القيمة؟",
+options:[
+"str",
+"bool",
+"float",
+"int"
+],
+correctIndex:3,
+rationale:"بعد استخدام int() تصبح القيمة Integer."
+},
+
+{
+id:36,
+question:"ما أفضل اسم متغير لتخزين درجة الطالب؟",
+options:[
+"1grade",
+"student grade",
+"studentGrade",
+"student-grade"
+],
+correctIndex:2,
+rationale:"studentGrade اسم واضح ويتبع قواعد تسمية المتغيرات."
+},
+{
+id:37,
+question:"ما ناتج الكود التالي؟\nprint('2' * 3)",
+options:[
+"6",
+"222",
+"23",
+"Error"
+],
+correctIndex:1,
+rationale:"عند ضرب النص في عدد صحيح يتم تكراره، لذلك '2' * 3 ينتج 222."
+},
+
+{
+id:38,
+question:"أي من الأكواد التالية يطبع الرسالة Hello World؟",
+options:[
+"print(Hello World)",
+'print("Hello World")',
+"input('Hello World')",
+"Hello World"
+],
+correctIndex:1,
+rationale:"النصوص في Python يجب أن تكون بين علامتي تنصيص."
+},
+{
+id:39,
+question:"ما ناتج الكود التالي؟\nprint(3 * 'Hi ')",
+options:[
+"Hi Hi Hi",
+"Hi3",
+"Error",
+"333"
+],
+correctIndex:0,
+rationale:"يمكن ضرب النص في عدد صحيح لتكراره عدة مرات في Python."
+},
+{
+id:40,
+question:"أي من الأكواد التالية يطلب من المستخدم إدخال اسمه ويخزنه في متغير اسمه name؟",
+options:[
+"print(name)",
+"name = input()",
+"input(name)",
+"name == input()"
+],
+correctIndex:1,
+rationale:"الدالة input() تُستخدم لإدخال البيانات وتخزينها في المتغير."
+},
+];
+
+
+        function App() {
+            // New State for Game Flow
+            const [hasStarted, setHasStarted] = useState(false);
+            
+            const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+            const [answers, setAnswers] = useState({});
+            const [flagged, setFlagged] = useState({});
+            const [timeLeft, setTimeLeft] = useState(40 * 60);
+            const [isFinished, setIsFinished] = useState(false);
+
+            // Timer Logic - Starts only if hasStarted is true
+            useEffect(() => {
+                if (!hasStarted || isFinished) return;
+                
+                const timer = setInterval(() => {
+                    setTimeLeft(prev => {
+                        if (prev <= 1) {
+                            clearInterval(timer);
+                            finishExam();
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
+                return () => clearInterval(timer);
+            }, [hasStarted, isFinished]);
+
+            const formatTime = (seconds) => {
+                const m = Math.floor(seconds / 60);
+                const s = seconds % 60;
+                return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+            };
+
+            const handleAnswerSelect = (optionIndex) => {
+                if (isFinished) return;
+                setAnswers(prev => ({...prev, [currentQuestionIndex]: optionIndex}));
+            };
+
+            const toggleFlag = () => {
+                if (isFinished) return;
+                setFlagged(prev => ({
+                    ...prev, 
+                    [currentQuestionIndex]: !prev[currentQuestionIndex]
+                }));
+            };
+
+            const finishExam = () => {
+                setIsFinished(true);
+            };
+
+            const scoreData = useMemo(() => {
+                let score = 0;
+                questionsData.forEach((q, idx) => {
+                    if (answers[idx] === q.correctIndex) score++;
+                });
+                const percentage = (score / questionsData.length) * 100;
+                return { score, percentage };
+            }, [answers]);
+
+            // --- 1. WELCOME SCREEN ---
+            if (!hasStarted) {
+                return (
+                    <div className="flex flex-col items-center justify-center h-screen bg-gray-50 relative animate-fade-in p-6">
+                        {/* Instructor Name - Right Side */}
+                        <div className="absolute top-8 right-8 md:top-12 md:right-16 text-right border-r-4 border-[#0056b3] pr-4">
+                            <p className="text-gray-500 text-sm font-semibold mb-1">إعداد وإشراف</p>
+                            <h2 className="text-3xl md:text-4xl font-black text-gray-800">م/ أحمد عبدالغني</h2>
+                        </div>
+
+                        {/* Center Content */}
+                        <div className="text-center max-w-lg w-full">
+                            <div className="mb-12">
+                                <div className="inline-block p-4 rounded-full bg-blue-50 mb-6 border border-blue-100">
+                                    <i className="fa-solid fa-laptop-code text-5xl text-[#0056b3]"></i>
+                                </div>
+                                <h1 className="text-5xl md:text-6xl font-black text-[#0056b3] mb-4 tracking-tight">
+                                    اختبار أساسيات البرمجة
+                                </h1>
+                                <p className="text-xl text-gray-600 font-medium">
+                                  اختبار المحاضرة الأولي
+                                </p>
+                            </div>
+
+                            <div className="space-y-6">
+                                <div className="flex justify-center gap-8 text-gray-600 mb-8">
+                                    <div className="flex flex-col items-center">
+                                        <span className="font-bold text-lg text-gray-800">{questionsData.length}</span>
+                                        <span className="text-sm">سؤال</span>
+                                    </div>
+                                    <div className="w-px bg-gray-300"></div>
+                                    <div className="flex flex-col items-center">
+                                        <span className="font-bold text-lg text-gray-800">40</span>
+                                        <span className="text-sm">دقيقة</span>
+                                    </div>
+                                </div>
+
+                                <button 
+                                    onClick={() => setHasStarted(true)}
+                                    className="btn-pulse bg-[#0056b3] text-white text-2xl font-bold py-4 px-16 rounded-full hover:bg-blue-700 transition transform hover:scale-105 shadow-xl w-full md:w-auto"
+                                >
+                                    ابــدأ الآن
+                                </button>
+                                <p className="text-gray-400 text-sm mt-4">
+                                    بالضغط على "ابدأ"، سيبدأ العداد التنازلي مباشرة.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // --- 2. RESULT SCREEN ---
+            if (isFinished) {
+                let message = "";
+                let colorClass = "";
+                if (scoreData.percentage >= 80) {
+                    message = "امتياز";
+                    colorClass = "text-green-600";
+                } else if (scoreData.percentage >= 60) {
+                    message = "جيد جدا";
+                    colorClass = "text-blue-600";
+                } else {
+                    message = "حاول مرة اخري";
+                    colorClass = "text-red-600";
+                }
+
+                return (
+                    <div className="flex flex-col items-center justify-center h-full bg-gray-50 p-6 animate-fade-in overflow-y-auto">
+                        <div className="bg-white p-8 rounded-lg shadow-xl text-center max-w-2xl w-full border-t-8 border-[#0056b3] my-6">
+                            <h1 className="text-4xl font-bold mb-4 text-[#0056b3]">نتيجة الاختبار</h1>
+                            <div className="text-6xl font-bold mb-6 text-gray-800">
+                                {scoreData.score} / {questionsData.length}
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-4 mb-6">
+                                <div 
+                                    className="bg-[#0056b3] h-4 rounded-full transition-all duration-1000" 
+                                    style={{width: `${scoreData.percentage}%`}}
+                                ></div>
+                            </div>
+                            <p className={`text-xl font-semibold mb-8 ${colorClass}`}>
+                                {message}
+                            </p>
+                            
+                            <div className="text-right border-t pt-6 max-h-96 overflow-y-auto">
+                                <h3 className="font-bold text-gray-700 mb-4">مراجعة الإجابات:</h3>
+                                {questionsData.map((q, idx) => (
+                                    <div key={idx} className="mb-4 p-3 bg-gray-50 rounded border">
+                                        <div className="font-bold text-sm text-gray-500 mb-1">سؤال {idx + 1}</div>
+                                        <div className="font-semibold text-gray-800 mb-1">{q.question}</div>
+                                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                            <span className={answers[idx] === q.correctIndex ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+                                                {answers[idx] === q.correctIndex ? "إجابة صحيحة" : (answers[idx] === undefined ? "لم تتم الإجابة" : "إجابة خاطئة")}
+                                            </span>
+                                            {answers[idx] !== q.correctIndex && (
+                                                <span className="text-gray-500 text-sm">
+                                                    (الصحيح: {q.options[q.correctIndex]})
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-gray-600 mt-1">{q.rationale}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <button 
+                                onClick={() => window.location.reload()}
+                                className="mt-6 px-8 py-3 bg-[#0056b3] text-white rounded hover:bg-blue-700 transition font-bold"
+                            >
+                                العودة للصفحة الرئيسية
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            const currentQuestion = questionsData[currentQuestionIndex];
+
+            // --- 3. EXAM INTERFACE ---
+            return (
+                <div className="flex flex-col h-full relative animate-fade-in">
+                    <header className="flex justify-between items-center p-4 shadow-sm border-b bg-white z-10 h-16">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-[#0056b3] text-white font-bold px-3 py-1 rounded text-sm">
+                               اختبار المحاضرة الاولي
+                            </div>
+                            <div className="font-bold text-gray-700 hidden sm:block">م/ أحمد عبدالغني</div>
+                        </div>
+                        
+                        <div className="hidden md:flex gap-1 overflow-x-auto px-4 nav-scroll">
+                            {questionsData.map((_, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => setCurrentQuestionIndex(idx)}
+                                    className={`w-8 h-8 rounded flex items-center justify-center text-sm font-bold transition-all flex-shrink-0
+                                        ${currentQuestionIndex === idx ? 'ring-2 ring-[#0056b3] ring-offset-1' : ''}
+                                        ${flagged[idx] ? 'bg-orange-100 text-orange-600 border border-orange-400' : 
+                                          answers[idx] !== undefined ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-500'}
+                                    `}
+                                >
+                                    {idx + 1}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className={`font-mono text-xl font-bold w-24 text-center ${timeLeft < 300 ? 'text-red-600 animate-pulse' : 'text-gray-700'}`}>
+                            {formatTime(timeLeft)}
+                        </div>
+                    </header>
+
+                    <main className="flex-1 flex flex-col md:flex-row overflow-hidden bg-gray-50">
+                        <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24">
+                            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm border p-6 min-h-[400px]">
+                                <div className="flex justify-between items-start mb-6">
+                                    <span className="text-gray-500 font-bold text-lg">سؤال {currentQuestionIndex + 1} من {questionsData.length}</span>
+                                    <button 
+                                        onClick={toggleFlag}
+                                        className={`flex items-center gap-2 px-3 py-1 rounded border transition ${flagged[currentQuestionIndex] ? 'bg-orange-50 border-orange-400 text-orange-600' : 'text-gray-400 border-gray-200 hover:bg-gray-50'}`}
+                                    >
+                                        <i className={`fa-solid fa-flag ${flagged[currentQuestionIndex] ? 'text-orange-500' : ''}`}></i>
+                                        <span className="text-sm font-bold">مراجعة لاحقاً</span>
+                                    </button>
+                                </div>
+
+                                <h2 className="text-xl font-bold text-gray-800 mb-8 border-r-4 border-[#0056b3] pr-4">
+                                    {currentQuestion.question}
+                                </h2>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {currentQuestion.options.map((opt, idx) => (
+                                        <label 
+                                            key={idx}
+                                            className={`
+                                                relative flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 group
+                                                ${answers[currentQuestionIndex] === idx 
+                                                    ? 'border-[#0056b3] bg-blue-50 shadow-md' 
+                                                    : 'border-gray-200 hover:border-gray-300 bg-white'}
+                                            `}
+                                        >
+                                            <input 
+                                                type="radio" 
+                                                name={`q-${currentQuestionIndex}`} 
+                                                className="hidden" 
+                                                checked={answers[currentQuestionIndex] === idx}
+                                                onChange={() => handleAnswerSelect(idx)}
+                                            />
+                                            <div className={`
+                                                w-6 h-6 rounded-full border-2 ml-4 flex items-center justify-center flex-shrink-0
+                                                ${answers[currentQuestionIndex] === idx ? 'border-[#0056b3]' : 'border-gray-300 group-hover:border-gray-400'}
+                                            `}>
+                                                {answers[currentQuestionIndex] === idx && (
+                                                    <div className="w-3 h-3 rounded-full bg-[#0056b3]"></div>
+                                                )}
+                                            </div>
+                                            <span className="text-lg font-medium text-gray-700">{opt}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+
+                    <footer className="bg-white p-4 border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20 flex justify-between items-center h-20">
+                        <button 
+                            onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
+                            disabled={currentQuestionIndex === 0}
+                            className="px-6 py-2 border-2 border-gray-300 text-gray-600 font-bold rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                            السابق
+                        </button>
+
+                        <div className="hidden md:block w-1/3 bg-gray-200 rounded-full h-2">
+                             <div 
+                                className="bg-[#4CAF50] h-2 rounded-full transition-all duration-300"
+                                style={{width: `${(Object.keys(answers).length / questionsData.length) * 100}%`}}
+                            ></div>
+                        </div>
+
+                        {currentQuestionIndex === questionsData.length - 1 ? (
+                            <button 
+                                onClick={finishExam}
+                                className="px-8 py-2 bg-[#0056b3] text-white font-bold rounded hover:bg-blue-700 shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5"
+                            >
+                                إنهاء الامتحان
+                            </button>
+                        ) : (
+                            <button 
+                                onClick={() => setCurrentQuestionIndex(prev => Math.min(questionsData.length - 1, prev + 1))}
+                                className="px-8 py-2 bg-[#0056b3] text-white font-bold rounded hover:bg-blue-700 shadow hover:shadow-md transition"
+                            >
+                                التالي
+                            </button>
+                        )}
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
