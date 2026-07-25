@@ -174,43 +174,35 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // ==== إعدادات إرسال النتيجة على تيليجرام ====
-       
-        async function sendResultToTelegram({
-    studentName,
-    score,
-    total,
-    percentage,
-    answers,
-    questionsData
-}) {
-    try {
-        const res = await fetch("/api/send-result", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                studentName,
-                score,
-                total,
-                percentage,
-                answers,
-                questionsData
-            })
-        });
+        async function sendResultToTelegram({ studentName, score, total, percentage, answers, questionsData }) {
+            try {
+                console.log("جاري إرسال النتيجة عبر السيرفر (API)...");
 
-        const data = await res.json();
+                const res = await fetch("/api/send-result", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        studentName,
+                        score,
+                        total,
+                        percentage,
+                        answers,
+                        questionsData
+                    })
+                });
 
-        if (!data.ok) {
-            console.error(data);
+                const data = await res.json();
+                if (!data.ok) {
+                    console.error("السيرفر رفض/فشل في إرسال النتيجة:", data);
+                } else {
+                    console.log("تم إرسال النتيجة بنجاح ✅");
+                }
+            } catch (err) {
+                console.error("تعذر إرسال النتيجة إلى تيليجرام (خطأ شبكة/CORS):", err);
+            }
         }
-    } catch (err) {
-        console.error(err);
-    }
-}
 
-       const questionsData = [
+        const questionsData = [
 
 {
 id:1,
@@ -783,33 +775,33 @@ rationale:"الدالة input() تُستخدم لإدخال البيانات و�
                 }));
             };
 
-           const finishExam = () => {
-    if (resultSentRef.current) return;
+            const finishExam = () => {
+                setIsFinished(true);
 
-    resultSentRef.current = true;
-    setIsFinished(true);
+                // نبعت النتيجة في كل محاولة (مش مربوطة بالجهاز/localStorage خالص).
+                // resultSentRef هنا بس بيمنع نداء مزدوج لنفس المحاولة (مثلاً لو انتهاء الوقت
+                // وزرار "إنهاء الامتحان" حصلوا في نفس اللحظة بالظبط).
+                if (resultSentRef.current) {
+                    console.log("تم تخطي الإرسال: النتيجة اتبعتت بالفعل لنفس المحاولة الحالية.");
+                    return;
+                }
+                resultSentRef.current = true;
 
-    const currentAnswers = { ...answers };
+                let score = 0;
+                questionsData.forEach((q, idx) => {
+                    if (answers[idx] === q.correctIndex) score++;
+                });
+                const percentage = (score / questionsData.length) * 100;
 
-    let score = 0;
-
-    questionsData.forEach((q, idx) => {
-        if (currentAnswers[idx] === q.correctIndex) {
-            score++;
-        }
-    });
-
-    const percentage = (score / questionsData.length) * 100;
-
-    sendResultToTelegram({
-        studentName,
-        score,
-        total: questionsData.length,
-        percentage,
-        answers: currentAnswers,
-        questionsData
-    });
-};
+                sendResultToTelegram({
+                    studentName,
+                    score,
+                    total: questionsData.length,
+                    percentage,
+                    answers,
+                    questionsData
+                });
+            };
 
             const scoreData = useMemo(() => {
                 let score = 0;
